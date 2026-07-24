@@ -1,0 +1,42 @@
+name: CI & Release Build
+
+on:
+  push:
+    branches: [ "main", "master" ]
+  pull_request:
+    branches: [ "main", "master" ]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Setup Zig
+      uses: goto-bus-stop/setup-zig@v2
+      with:
+        zig-version: latest
+
+    - name: Run Unit Tests
+      run: zig build test
+
+    - name: Build Optimized Release Binary & Shared Library
+      run: zig build -Doptimize=ReleaseSmall
+
+    - name: Verify Artifacts
+      run: |
+        echo "Verifying compiled binary executable..."
+        ls -la zig-out/bin/zigcron
+        
+        echo "Verifying compiled C shared library..."
+        ls -la zig-out/lib/libzigcron.so
+
+    - name: Upload Build Artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: zigcron-artifacts
+        path: |
+          zig-out/bin/zigcron
+          zig-out/lib/libzigcron.so
