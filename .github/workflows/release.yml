@@ -1,34 +1,30 @@
-name: Release Linux Binaries
+name: Build zigcron
 
 on:
   push:
-    tags:
-      - 'v*'
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
 
 jobs:
   build:
-    name: Build Binary
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
-
+    
     steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
-
-      - name: Setup Zig
-        uses: mlugg/setup-zig@v1
+      - uses: actions/checkout@v4
+      
+      - uses: goto-bus-stop/setup-zig@v2
         with:
-          version: 0.11.0
-
-      - name: Build Binary
-        run: |
-          zig build -Doptimize=ReleaseSmall
-          mkdir -p release_dist
-          cp zig-out/bin/zigcron release_dist/zigcron-linux-x86_64
-
-      - name: Upload to Release
-        uses: softprops/action-gh-release@v2
+          zig-version: 0.13.0
+      
+      - name: Test
+        run: zig build test
+      
+      - name: Build
+        run: zig build -Doptimize=ReleaseSmall
+      
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
         with:
-          files: release_dist/*
-          generate_release_notes: true
+          name: zigcron
+          path: zig-out/
