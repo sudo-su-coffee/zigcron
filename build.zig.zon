@@ -1,10 +1,11 @@
 .{
-    .name = .@"zigcron",
-    .version = "0.1.0",
-    .dependencies = .{},
+    .name = "zigcron",
+    .version = "1.0.0",
     .paths = .{
         "build.zig",
         "build.zig.zon",
         "src",
+        "LICENSE",
+        "README.md",
     },
 }
