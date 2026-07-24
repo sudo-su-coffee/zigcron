@@ -1,7 +1,6 @@
 .{
     .name = "zigcron",
     .version = "0.2.0",
-    .dependencies = .{},
     .paths = .{
         "build.zig",
         "build.zig.zon",
