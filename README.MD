@@ -32,7 +32,7 @@ When a task fails, `zigcron` retries up to `maximum_retry_attempts`. If retries 
 
 ### 4. 📝 Built-in File Logging (`zigcron.log`)
 
-The daemon automatically creates and appends to `zigcron.log` in its current working directory while simultaneously streaming formatted logs to stdout/stderr.
+The daemon automatically creates and appends logs to `zigcron.log` in its current working directory while simultaneously streaming formatted output to stdout/stderr.
 
 ### 5. 🎯 Execution Payloads & Limits
 
@@ -84,15 +84,15 @@ Binary outputs:
 
 ## 🚀 Daemon Execution & Production Setup
 
-### Option A: Running as a Background Daemon (`nohup`)
+### Option A: Running as a Background Daemon
 
-Pass your schedule configuration path directly to `zigcron`. It automatically handles writing execution state to `zigcron.log`:
+Pass your configuration file path directly to `zigcron`. It automatically handles writing structured states to `zigcron.log`:
 
 ```bash
 # Start zigcron in the background
-nohup ./zig-out/bin/zigcron schedules.json > /dev/null 2>&1 &
+./zig-out/bin/zigcron schedules.json &
 
-# Monitor execution logs in real-time
+# Monitor auto-generated execution logs in real-time
 tail -f zigcron.log
 
 ```
@@ -137,28 +137,6 @@ tail -f /opt/zigcron/zigcron.log
 
 ---
 
-## 📂 Multi-Job Architecture (Separate Config Files)
-
-In production, you can separate schedules across distinct `.json` files (e.g., `db-backups.json`, `cache-flush.json`). Run individual daemon instances targeting specific configs:
-
-```text
-schedules/
-├── 01-database-backups.json
-├── 02-cache-invalidation.json
-└── 03-email-reports.json
-
-```
-
-Run dedicated instances for each task set:
-
-```bash
-./zig-out/bin/zigcron schedules/01-database-backups.json &
-./zig-out/bin/zigcron schedules/02-cache-invalidation.json &
-
-```
-
----
-
 ## 🚦 Configuration Format (`schedules.json`)
 
 ```json
@@ -189,31 +167,6 @@ Run dedicated instances for each task set:
       "max_memory_mb": 512,
       "timeout_ms": 60000
     }
-  },
-  {
-    "id": 2,
-    "name": "ephemeral-cache-flush",
-    "state": "ENABLED",
-    "schedule": "rate(10 seconds)",
-    "timezone": "America/New_York",
-    "target": {
-      "command": "echo 'Flushing cache...'",
-      "input": null
-    },
-    "flexible_time_window": {
-      "mode": "OFF",
-      "maximum_window_seconds": 0
-    },
-    "retry_policy": {
-      "maximum_retry_attempts": 0,
-      "maximum_event_age_seconds": 60
-    },
-    "misfire_policy": "skip_missed",
-    "dead_letter_config": null,
-    "resources": {
-      "max_memory_mb": 64,
-      "timeout_ms": 2000
-    }
   }
 ]
 
@@ -239,13 +192,6 @@ lib.zigcron_version.restype = ctypes.c_char_p
 # Call Zig C-ABI export
 version = lib.zigcron_version().decode("utf-8")
 print(f"Loaded zigcron shared library version: {version}")
-
-```
-
-Run Python integration:
-
-```bash
-python3 test_zigcron.py
 
 ```
 
