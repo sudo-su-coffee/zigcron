@@ -1,0 +1,83 @@
+[
+  {
+    "id": 1,
+    "name": "critical-db-backup",
+    "state": "ENABLED",
+    "schedule": "rate(1 hour)",
+    "timezone": "UTC",
+    "start_date": "2026-01-01T00:00:00Z",
+    "end_date": "2026-12-31T23:59:59Z",
+    "target": {
+      "command": "echo 'Running backup with payload:'",
+      "input": "{\"db_name\": \"production_v2\", \"compress\": true}"
+    },
+    "flexible_time_window": {
+      "mode": "FLEXIBLE",
+      "maximum_window_seconds": 10
+    },
+    "retry_policy": {
+      "maximum_retry_attempts": 3,
+      "maximum_event_age_seconds": 3600
+    },
+    "misfire_policy": "fire_immediately",
+    "dead_letter_config": {
+      "path": "/tmp/zigcron_dlq.json"
+    },
+    "resources": {
+      "max_memory_mb": 512,
+      "timeout_ms": 60000
+    }
+  },
+  {
+    "id": 2,
+    "name": "ephemeral-cache-flush",
+    "state": "ENABLED",
+    "schedule": "rate(10 seconds)",
+    "timezone": "America/New_York",
+    "target": {
+      "command": "echo 'Flushing ephemeral cache...'",
+      "input": null
+    },
+    "flexible_time_window": {
+      "mode": "OFF",
+      "maximum_window_seconds": 0
+    },
+    "retry_policy": {
+      "maximum_retry_attempts": 0,
+      "maximum_event_age_seconds": 60
+    },
+    "misfire_policy": "skip_missed",
+    "dead_letter_config": null,
+    "resources": {
+      "max_memory_mb": 64,
+      "timeout_ms": 2000
+    }
+  },
+  {
+  "id": 3,
+  "name": "failing-job-test",
+  "state": "ENABLED",
+  "schedule": "rate(5 seconds)",
+  "timezone": "UTC",
+  "target": {
+    "command": "exit 1",
+    "input": null
+  },
+  "flexible_time_window": {
+    "mode": "OFF",
+    "maximum_window_seconds": 0
+  },
+  "retry_policy": {
+    "maximum_retry_attempts": 2,
+    "maximum_event_age_seconds": 60
+  },
+  "misfire_policy": "skip_missed",
+  "dead_letter_config": {
+    "path": "/tmp/zigcron_dlq.json"
+  },
+  "resources": {
+    "max_memory_mb": 64,
+    "timeout_ms": 2000
+  }
+}
+]
