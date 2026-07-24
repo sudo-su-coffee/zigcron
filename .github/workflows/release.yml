@@ -6,38 +6,29 @@ on:
       - 'v*'
 
 jobs:
-  build-and-release:
-    name: Build ${{ matrix.target }}
+  build:
+    name: Build Binary
     runs-on: ubuntu-latest
     permissions:
       contents: write
-
-    strategy:
-      matrix:
-        include:
-          - target: x86_64-linux-gnu
-            output_name: zigdiff-linux-x86_64
-          - target: aarch64-linux-gnu
-            output_name: zigdiff-linux-arm64
 
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
 
       - name: Setup Zig
-        uses: goto-bus-stop/setup-zig@v2
+        uses: mlugg/setup-zig@v1
         with:
-          zig-version: 0.13.0
+          version: 0.11.0
 
       - name: Build Binary
         run: |
-          zig build -Dtarget=${{ matrix.target }} -Doptimize=ReleaseSmall
+          zig build -Doptimize=ReleaseSmall
           mkdir -p release_dist
-          cp zig-out/bin/zigdiff release_dist/${{ matrix.output_name }}
+          cp zig-out/bin/zigcron release_dist/zigcron-linux-x86_64
 
-      - name: Upload Binary to Release
+      - name: Upload to Release
         uses: softprops/action-gh-release@v2
         with:
           files: release_dist/*
-          name: "zigdiff ${{ github.ref_name }}"
           generate_release_notes: true
