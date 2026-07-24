@@ -1,55 +1,16 @@
-name: CI & Release Build
+name: Release Linux Binaries
 
 on:
   push:
-    branches: [ "main", "master" ]
     tags:
-      - 'v*' # Triggers release flow on v1.0.0, v1.1.0, etc.
-  pull_request:
-    branches: [ "main", "master" ]
+      - 'v*'
 
 jobs:
-  build-and-test:
-    runs-on: ubuntu-latest
-
-    steps:
-    - name: Checkout repository
-      uses: actions/checkout@v4
-
-    - name: Setup Zig
-      uses: goto-bus-stop/setup-zig@v2
-      with:
-        zig-version: latest
-
-    - name: Run Unit Tests
-      run: zig build test
-
-    - name: Build Optimized Release Binary & Shared Library
-      run: zig build -Doptimize=ReleaseSmall
-
-    - name: Verify Artifacts
-      run: |
-        echo "Verifying compiled binary executable..."
-        ls -la zig-out/bin/
-        
-        echo "Verifying compiled C shared library..."
-        ls -la zig-out/lib/ || echo "No shared library target for this run"
-
-    - name: Upload Build Artifacts (CI)
-      uses: actions/upload-artifact@v4
-      with:
-        name: zigdiff-artifacts
-        path: |
-          zig-out/bin/*
-          zig-out/lib/*
-
-  release-binaries:
-    needs: build-and-test
-    if: startsWith(github.ref, 'refs/tags/v')
-    name: Release Linux Binary (${{ matrix.target }})
+  build-and-release:
+    name: Build ${{ matrix.target }}
     runs-on: ubuntu-latest
     permissions:
-      contents: write # Needed to attach binaries to GitHub Releases
+      contents: write
 
     strategy:
       matrix:
@@ -60,23 +21,23 @@ jobs:
             output_name: zigdiff-linux-arm64
 
     steps:
-    - name: Checkout Code
-      uses: actions/checkout@v4
+      - name: Checkout Code
+        uses: actions/checkout@v4
 
-    - name: Setup Zig
-      uses: mlugg/setup-zig@v1
-      with:
-        version: 0.13.0
+      - name: Setup Zig
+        uses: goto-bus-stop/setup-zig@v2
+        with:
+          zig-version: 0.13.0
 
-    - name: Build Target Binary
-      run: |
-        zig build -Dtarget=${{ matrix.target }} -Doptimize=ReleaseSmall
-        mkdir -p release_dist
-        cp zig-out/bin/zigdiff release_dist/${{ matrix.output_name }}
+      - name: Build Binary
+        run: |
+          zig build -Dtarget=${{ matrix.target }} -Doptimize=ReleaseSmall
+          mkdir -p release_dist
+          cp zig-out/bin/zigdiff release_dist/${{ matrix.output_name }}
 
-    - name: Upload Binary to GitHub Release
-      uses: softprops/action-gh-release@v2
-      with:
-        files: release_dist/*
-        name: "zigdiff ${{ github.ref_name }}"
-        generate_release_notes: true
+      - name: Upload Binary to Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: release_dist/*
+          name: "zigdiff ${{ github.ref_name }}"
+          generate_release_notes: true
