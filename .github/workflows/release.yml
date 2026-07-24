@@ -3,14 +3,15 @@ name: Release Linux Binaries
 on:
   push:
     tags:
-      - 'v*' # Triggers on v1.0.0, v1.1.0, etc.
+      - 'v*'
+  workflow_dispatch:
 
 jobs:
   build-and-release:
     name: Build ${{ matrix.target }}
     runs-on: ubuntu-latest
     permissions:
-      contents: write # Needed to attach binaries to GitHub Releases
+      contents: write
 
     strategy:
       matrix:
@@ -34,10 +35,13 @@ jobs:
           zig build -Dtarget=${{ matrix.target }} -Doptimize=ReleaseSmall
           mkdir -p release_dist
           cp zig-out/bin/zigcron release_dist/${{ matrix.output_name }}
+          chmod +x release_dist/${{ matrix.output_name }}
 
       - name: Upload Binary to Release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v1
         with:
           files: release_dist/*
           name: "zigcron ${{ github.ref_name }}"
           generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
